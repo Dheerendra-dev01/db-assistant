@@ -25,6 +25,8 @@ import { Request, Response } from 'express';
   public handleQuery = async (req: Request, res: Response): Promise<void> => {
   const { prompt, collectionName } = req.body;
 
+  console.log("prompt-------->>>>>",prompt)
+
   if (mongoose.connection.readyState !== 1 || !mongoose.connection.db) {
     res.status(400).json({ success: false, message: 'No DB connection' });
     return;
