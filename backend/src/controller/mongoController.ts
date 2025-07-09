@@ -7,6 +7,7 @@ import { Request, Response } from 'express';
   public connectDB = async (req: Request, res: Response): Promise<void> => {
     const { mongoUri } = req.body;
      let  dbConnection:any
+     console.log("dbConnection---------->>>>>>")
 
 
     try {
