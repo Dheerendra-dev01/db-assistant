@@ -3,8 +3,11 @@ import axios from 'axios';
 import { Request, Response } from 'express';
 
  class MongoController {
+  constructor(){}
 
   public connectDB = async (req: Request, res: Response): Promise<void> => {
+
+    console.log("void--------->>>>>", Promise<void>)
     const { mongoUri } = req.body;
      let  dbConnection:any
      console.log("dbConnection---------->>>>>>")
@@ -74,9 +77,7 @@ Do NOT include code blocks, markdown, or any explanation — only return valid J
     const collection = mongoose.connection.db.collection(collectionName);
 
     // Check if it's an aggregation pipeline (array) or a simple find query (object)
-    const result = Array.isArray(mongoQuery)
-      ? await collection.aggregate(mongoQuery).toArray()
-      : await collection.find(mongoQuery).toArray();
+    const result = Array.isArray(mongoQuery) ? await collection.aggregate(mongoQuery).toArray(): await collection.find(mongoQuery).toArray();
 
     res.json({ success: true, mongoQuery, result });
 

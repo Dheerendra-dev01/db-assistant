@@ -8,7 +8,7 @@ import SqlRoutes from './src/routes/sqlRoutes';
 dotenv.config();
 
 const app: Application = express();
-const PORT = process.env.PORT || 8000;
+let PORT = process.env.PORT || 8000;
 
 // Middleware
 app.use(cors());
