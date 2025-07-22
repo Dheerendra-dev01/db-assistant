@@ -3,7 +3,7 @@ name: Deploy Node.js App to EC2
 on:
   push:
     branches:
-      - main
+      - Production
 
 env:
   EC2_HOST: ${{ vars.EC2_HOST }}
@@ -39,7 +39,7 @@ jobs:
           key: ${{ env.EC2_SSH_KEY }}
           script: |
             cd ~/test/db-assistant
-            git pull origin main
+            git pull origin Production
             cd backend
             npm install
             npx tsc
