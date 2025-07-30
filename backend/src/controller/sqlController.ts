@@ -65,6 +65,7 @@ Ensure correct column usage. Do NOT include markdown, explanations, or code bloc
       );
 
       let generatedQueryText = geminiRes.data?.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || '';
+      console.log('generatedQueryText')
 
       generatedQueryText = generatedQueryText.replace(/```(?:sql)?\n?/, '').replace(/```$/, '').trim();
       // Execute the generated SQL

@@ -45,7 +45,7 @@ jobs:
 
   frontend:
     runs-on: ubuntu-latest
-    needs: backend # optional: ensures backend deploys first
+    needs: backend
 
     steps:
       - name: Checkout code
