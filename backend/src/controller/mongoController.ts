@@ -6,86 +6,129 @@ import { Request, Response } from 'express';
   constructor(){}
 
   public connectDB = async (req: Request, res: Response): Promise<void> => {
+  const { mongoUri } = req.body;
 
-    console.log("void--------->>>>>", Promise<void>)
-    const { mongoUri } = req.body;
-     let  dbConnection:any
-     console.log("dbConnection---------->>>>>>")
+  if (!mongoUri) {
+    res.status(400).json({ success: false, message: 'mongoUri is required' });
+    return;
+  }
+
+  try {
+    const dbConnection = await mongoose.connect(mongoUri, {});
+
+    res.json({
+      success: true,
+      message: 'MongoDB connected successfully',
+      host: dbConnection.connection.host,
+      db: dbConnection.connection.name,
+    });
+  } catch (err: any) {
+    console.error("DB Connection Error:", err.message);
+    res.status(500).json({
+      success: false,
+      message: 'MongoDB connection failed',
+      error: err.message,
+    });
+  }
+};
 
 
-    try {
-      dbConnection = await mongoose.connect(mongoUri, {});
-      console.log(dbConnection)
-      res.json({ success: true, message: 'MongoDB connected successfully' });
-    } catch (err: any) {
-      res.status(500).json({
-        success: false,
-        message: 'MongoDB connection failed',
-        error: err.message,
-      });
-    }
-  };
-
-  public handleQuery = async (req: Request, res: Response): Promise<void> => {
+public handleQuery = async (req: Request, res: Response): Promise<void> => {
   const { prompt, collectionName } = req.body;
 
+  if (!prompt || !collectionName) {
+    res.status(400).json({ success: false, message: 'Prompt and collectionName are required' });
+    return;
+  }
 
   if (mongoose.connection.readyState !== 1 || !mongoose.connection.db) {
     res.status(400).json({ success: false, message: 'No DB connection' });
     return;
   }
 
-  try {
-    const geminiRes = await axios.post(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
+  const data = JSON.stringify({
+    contents: [
       {
-        contents: [
+        parts: [
           {
-            parts: [
-              {
-                text: `Convert this natural language prompt into a valid MongoDB query. 
-If the prompt requires simple filtering, return a JSON object that can be used inside find().
-If the prompt needs more advanced logic (like random sampling, grouping, etc.), return a valid aggregation pipeline as an array.
-Do NOT include code blocks, markdown, or any explanation — only return valid JSON.`,
-              },
-              { text: prompt },
-            ],
-          },
-        ],
+text: `You are a MongoDB query generator. ONLY return the MongoDB query as a JSON object. Do not include any explanation or text. Use the MongoDB collection named "${collectionName}". Convert the following prompt into a valid MongoDB query:\n\nPrompt: ${prompt}`
+          }
+        ]
       }
-    );
+    ]
+  });
 
-    let generatedQueryText = geminiRes.data.candidates[0].content.parts[0].text.trim();
+  const config = {
+    method: 'post',
+    maxBodyLength: Infinity,
+    url: 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-goog-api-key': process.env.GEMINI_API_KEY || '', // Ensure this is defined in .env
+    },
+    data: data,
+  };
 
-    if (generatedQueryText.startsWith('```')) {
-      generatedQueryText = generatedQueryText.replace(/```(?:json)?\n?/, '').replace(/```$/, '').trim();
-    }
+  try {
+    const geminiRes = await axios.request(config);
+
+
+    console.log("geminiRes------------->>>>",geminiRes)
+
+    let generatedText = geminiRes.data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    console.log("Generated Text:", generatedText);
+
+    generatedText = generatedText.replace(/```(?:json)?\s*|```/g, '').trim();
+
+
+    console.log("generatedText---------------->>>>",generatedText)
 
     let mongoQuery;
     try {
-      mongoQuery = JSON.parse(generatedQueryText);
+      mongoQuery = JSON.parse(generatedText);
+      console.log("mongoQuery---------------------->>>>>>",mongoQuery)
     } catch (parseErr: any) {
       res.status(400).json({
         success: false,
         message: 'Failed to parse generated query as JSON',
         error: parseErr.message,
-        rawQuery: generatedQueryText,
+        rawQuery: generatedText,
       });
       return;
     }
 
     const collection = mongoose.connection.db.collection(collectionName);
 
-    // Check if it's an aggregation pipeline (array) or a simple find query (object)
-    const result = Array.isArray(mongoQuery) ? await collection.aggregate(mongoQuery).toArray(): await collection.find(mongoQuery).toArray();
+  let result;
 
+if (mongoQuery.find) {
+  // Gemini returned a command-style query
+  if (mongoQuery.find === collectionName) {
+    result = await collection.find({}).toArray();
+  } else {
+     res.status(400).json({
+      success: false,
+      message: `Query collection mismatch. Expected "${collectionName}", got "${mongoQuery.find}"`,
+      rawQuery: mongoQuery,
+    });
+  }
+} else if (Array.isArray(mongoQuery)) {
+  // Aggregation pipeline
+  result = await collection.aggregate(mongoQuery).toArray();
+} else {
+  // Normal filter query
+  result = await collection.find(mongoQuery).toArray();
+}
     res.json({ success: true, mongoQuery, result });
 
   } catch (err: any) {
-    console.error('Error in /query:', err);
+    console.error('Error in /query:', err.response?.data || err.message);
     res.status(500).json({ success: false, message: err.message });
   }
 };
-}
 
+
+};
+ 
 export default MongoController
+

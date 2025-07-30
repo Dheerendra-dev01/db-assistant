@@ -23,6 +23,8 @@ export default function NaturalLanguageMongoDBQuery() {
   const [result, setResult] = useState([])
   const [error, setError] = useState("")
   const [isQuerying, setIsQuerying] = useState(false)
+  const [connectionResponse, setConnectionResponse] = useState(null);
+
 
   const connectToDB = async () => {
     try {
@@ -30,10 +32,13 @@ export default function NaturalLanguageMongoDBQuery() {
       setError("")
       const res = await axios.post(`${api.serverUrl}/connect-db`, { mongoUri });
       console.log("server--->",res)
+if (!res?.data?.collection_name) {
+      console.log("User needs to enter collection name");
+    } else {
+      setCollectionName(res.data.collection_name); 
+    }
 
-      if(!res){
-        console.log("error")
-      }
+    setConnectionResponse(res.data); 
       setIsConnected(true)
       setError("")
     } catch (err) {
@@ -123,8 +128,9 @@ export default function NaturalLanguageMongoDBQuery() {
               <Input
                 id="collection"
                 placeholder="Enter collection name"
-                value={collectionName}
-                onChange={(e) => setCollectionName(e.target.value)}
+                  value={collectionName}
+                 onChange={(e) => setCollectionName(e.target.value)}
+                 readOnly={connectionResponse?.collection_name ? true : false}
               />
             </div>
             <div>
