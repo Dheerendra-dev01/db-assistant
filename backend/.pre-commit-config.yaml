@@ -3,3 +3,4 @@ repos:
     rev: v8.18.0  # Specify the desired version of Gitleaks
     hooks:
       - id: gitleaks
+      
