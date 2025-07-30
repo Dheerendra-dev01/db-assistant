@@ -2,6 +2,7 @@ import express, { Application } from 'express';
 import bodyParser from 'body-parser';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import connectDatabase from "./src/db/connect";
 import mongoose from 'mongoose';
 import MongoRoutes from './src/routes/mongoRoute';
 import SqlRoutes from './src/routes/sqlRoutes';
@@ -16,15 +17,6 @@ const app: Application = express();
 let PORT = process.env.PORT || 8000;
 
 // MongoDB Connection
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/db-assistant';
-
-mongoose.connect(MONGODB_URI)
-  .then(() => {
-    console.log('Connected to MongoDB successfully');
-  })
-  .catch((error) => {
-    console.error('MongoDB connection error:', error);
-  });
 
 // Middleware
 app.use(cors({
@@ -45,7 +37,10 @@ app.get('/', (_req, res) => {
   res.send('API is running...');
 });
 
+
 // Start server
-app.listen(PORT, () => {
+app.listen(PORT, async () => {
   console.log(`Server running at http://localhost:${PORT}`);
+  await connectDatabase.connectDb();
+
 });
