@@ -20,9 +20,10 @@ let PORT = process.env.PORT || 8000;
 
 // Middleware
 app.use(cors({
+  origin: 'https://db-assistant-a3jh.vercel.app',
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  credentials: true
 }));
-app.use(bodyParser.json());
 
 // API routes
 app.use('/api/mongo', MongoRoutes.router);  
