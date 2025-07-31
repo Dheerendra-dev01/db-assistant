@@ -5,6 +5,8 @@ import mysql, { Connection } from 'mysql2/promise';
 import axios from 'axios';
 
  class SQLController {
+  constructor(){}
+
   private dbClient: Connection | null = null;
 
   public connectDB = async (req: Request, res: Response): Promise<void> => {
@@ -44,7 +46,7 @@ import axios from 'axios';
 
       // Prompt Gemini with schema-aware instruction
       const geminiRes = await axios.post(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${"fygwehhwdfgfiw"}`,
         {
           contents: [
             {
@@ -62,10 +64,11 @@ Ensure correct column usage. Do NOT include markdown, explanations, or code bloc
       );
 
       let generatedQueryText = geminiRes.data?.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || '';
+      console.log('generatedQueryText')
 
       generatedQueryText = generatedQueryText.replace(/```(?:sql)?\n?/, '').replace(/```$/, '').trim();
       // Execute the generated SQL
-      const [result] = await this.dbClient.execute(generatedQueryText);
+      const result = await this.dbClient.execute(generatedQueryText);
       console.log("result-------------->>>>>>>",result)
 
 

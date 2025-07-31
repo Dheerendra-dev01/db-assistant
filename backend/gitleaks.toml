@@ -1,0 +1,5 @@
+[[rules]]
+description = "Potential API Key in Interpolation"
+id = "custom-api-key"
+regex = '''\$\{["']?[a-zA-Z0-9_\-]{16,}["']?\}'''
+tags = ["key", "custom", "interpolation"]

@@ -1,3 +1,6 @@
 .env
 node_modules
-package-lock.json
+package-lock.json.env
+# SSL Keys
+key.pem
+cert.pem
