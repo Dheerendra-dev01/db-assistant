@@ -41,6 +41,11 @@ jobs:
             cd ~/test/db-assistant
             git pull origin Production
             cd backend
+            if [ ! -f key.pem ]; then
+              openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
+              -keyout key.pem -out cert.pem \
+              -subj "/C=IN/ST=Delhi/L=NewDelhi/O=Dev/CN=13.201.104.180"
+            fi
             pm2 restart db-server || pm2 start npx --name db-server -- ts-node server.ts
 
   frontend:
@@ -76,5 +81,4 @@ jobs:
             cd frontend
             npm install
             npm run build
-            # if using Nginx or serve:
             pm2 restart frontend || pm2 start npx --name frontend -- serve -s build
